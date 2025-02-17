@@ -1,27 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Chord Detector</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Detection</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        .error {
+            color: red;
+        }
+        .chords {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Chord Detector</h1>
+    <h1>Chord Detection</h1>
 
-    {% if error %}
-        <p style="color: red;">Error: {{ error }}</p>
-    {% endif %}
-
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="audio_file">
         <input type="submit" value="Detect Chords">
     </form>
 
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
     {% if chords %}
-        <h2>Detected Chords for {{ filename }}</h2>
-        <ul>
-            {% for chord, start, end in chords %}
-                <li>{{ start }} - {{ end }}: {{ chord }}</li>
-            {% endfor %}
-        </ul>
+        <div class="chords">
+            <h2>Detected Chords:</h2>
+            <ul>
+                {% for chord, start, end in chords %}
+                    <li>{{ start }} - {{ end }}: {{ chord }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 </body>
 </html>

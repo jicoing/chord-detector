@@ -1,19 +1,31 @@
-import os
-from flask import Flask, render_template, request, redirect, url_for
+# app.py (This is your main Flask application file)
+
 import librosa
 import numpy as np
 from scipy.signal import medfilt
-import tempfile  # For handling temporary files
-from werkzeug.utils import secure_filename  # For secure filename handling
+from flask import Flask, render_template, request, redirect, url_for
+import os
+from werkzeug.utils import secure_filename  # For secure file uploads
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Store uploaded files temporarily
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create the folder if it doesn't exist
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit uploads to 16MB
+
+# Configuration (adjust as needed)
+UPLOAD_FOLDER = 'uploads'  # Store uploaded files
+ALLOWED_EXTENSIONS = {'mp3', 'wav'}  # Allowed audio file types
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit file size to 16MB
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def allowed_file(filename):
+    """Check if the file extension is allowed."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def generate_chord_templates():
-    """Generate chord templates for major and minor triads"""
+    """Generate chord templates for major and minor triads."""
     templates = []
     chord_names = []
     for root in range(12):
@@ -39,14 +51,14 @@ def generate_chord_templates():
 
 
 def format_time(seconds):
-    """Convert seconds to minutes and seconds format"""
+    """Convert seconds to minutes and seconds format."""
     minutes = int(seconds // 60)
     seconds = int(seconds % 60)
     return f"{minutes}:{seconds:02d}"
 
 
 def detect_chords(audio_path, hop_length=512, n_fft=2048, min_duration=0.5):
-    """Detect chords in an audio file"""
+    """Detect chords in an audio file."""
     try:
         # Load audio
         y, sr = librosa.load(audio_path, mono=True)
@@ -99,7 +111,8 @@ def detect_chords(audio_path, hop_length=512, n_fft=2048, min_duration=0.5):
 
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
+def upload_file():
+    """Handle file uploads and chord detection."""
     if request.method == 'POST':
         # Check if a file was uploaded
         if 'file' not in request.files:
@@ -112,22 +125,24 @@ def index():
         if file.filename == '':
             return render_template('index.html', error='No selected file')
 
-        if file:
+        if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
 
-            try:
-                detected_chords = detect_chords(file_path)
-                os.remove(file_path)  # Clean up the temporary file
-                return render_template('index.html', chords=detected_chords, filename=filename)
+            # Detect chords
+            detected_chords = detect_chords(filepath)
 
-            except Exception as e:
-                os.remove(file_path)  # Clean up the temporary file even if error occurs
-                return render_template('index.html', error=f"Error processing audio: {e}")
+            # Clean up the uploaded file (optional, but good for space)
+            # os.remove(filepath)
+
+            return render_template('index.html', chords=detected_chords, filename=filename)  # Pass filename to template
+
+        else:
+            return render_template('index.html', error='Invalid file type. Allowed types: mp3, wav')
 
     return render_template('index.html')
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)  # Disable debug mode in production!
