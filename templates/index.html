@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chord Detector</title>
+</head>
+<body>
+    <h1>Chord Detector</h1>
+
+    {% if error %}
+        <p style="color: red;">Error: {{ error }}</p>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Detect Chords">
+    </form>
+
+    {% if chords %}
+        <h2>Detected Chords for {{ filename }}</h2>
+        <ul>
+            {% for chord, start, end in chords %}
+                <li>{{ start }} - {{ end }}: {{ chord }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>
