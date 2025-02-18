@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chord Detection Results</title>
+</head>
+<body>
+    <h1>Chord Detection Results for {{ filename }}</h1>
+    {% if chords %}
+        <ul>
+            {% for chord, start, end in chords %}
+                <li>{{ start }} - {{ end }}: {{ chord }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No chords detected or an error occurred.</p>
+    {% endif %}
+    <a href="/">Upload another file</a>
+</body>
+</html>
